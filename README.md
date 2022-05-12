@@ -8,6 +8,7 @@
 >
 >- Update `README.md`
 >- Terraform
+>    - Change `path` in `main.tf` to match new fleet
 >    - Add necessary providers in `providers.tf`
 >    - Add necessary secrets in `secrets.tf`
 >    - Adjust or remove `workspaces.tf`
