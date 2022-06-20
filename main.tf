@@ -14,3 +14,18 @@ terraform {
     key_file  = "ansible/files/consul-client.key"
   }
 }
+
+/* CF Zones ------------------------------------*/
+
+/* CloudFlare Zone IDs required for records */
+data "cloudflare_zones" "active" {
+  filter { status = "active" }
+}
+
+/* For easier access to zone ID by domain name */
+locals {
+  zones = {
+    for zone in data.cloudflare_zones.active.zones :
+    zone.name => zone.id
+  }
+}
