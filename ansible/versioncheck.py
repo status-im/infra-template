@@ -52,7 +52,7 @@ for req in requirements:
         errors += 1
         continue
 
-    # For now we allow not specifying versions for everyhing.
+    # For now we allow not specifying versions for everything.
     if role.version is None:
         print('%25s - No version!' % role.name)
         continue
