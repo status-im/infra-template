@@ -17,6 +17,8 @@
 >    - Extend `ansible/group_vars/all.yml`
 >    - Or add a dedicated `group_vars` file
 >    - Create the `ansible/main.yml` playbook
+>- Github
+>    - Add to `infra-repos/variables.tf`
 
 # Repo Usage
 
