@@ -7,18 +7,18 @@
   src: git@github.com:status-im/infra-role-wireguard.git
   scm: git
 
-- name: open-ports
+- name: infra-role-open-ports
   src: git@github.com:status-im/infra-role-open-ports.git
   scm: git
 
-- name: swap-file
+- name: infra-role-swap-file
   src: git@github.com:status-im/infra-role-swap-file.git
   scm: git
 
-- name: consul-service
+- name: infra-role-consul-service
   src: git@github.com:status-im/infra-role-consul-service.git
   scm: git
 
-- name: systemd-timer
+- name: infra-role-systemd-timer
   src: git@github.com:status-im/infra-role-systemd-timer.git
   scm: git
