@@ -1,24 +1,17 @@
----
 - name: infra-role-bootstrap-linux
   src: git@github.com:status-im/infra-role-bootstrap-linux.git
-  scm: git
 
 - name: infra-role-wireguard
   src: git@github.com:status-im/infra-role-wireguard.git
-  scm: git
 
 - name: infra-role-open-ports
   src: git@github.com:status-im/infra-role-open-ports.git
-  scm: git
 
 - name: infra-role-swap-file
   src: git@github.com:status-im/infra-role-swap-file.git
-  scm: git
 
 - name: infra-role-consul-service
   src: git@github.com:status-im/infra-role-consul-service.git
-  scm: git
 
 - name: infra-role-systemd-timer
   src: git@github.com:status-im/infra-role-systemd-timer.git
-  scm: git
