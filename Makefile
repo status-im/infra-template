@@ -46,3 +46,26 @@ init-terraform:
 
 cleanup:
 	rm -r $(TF_PLUGINS_DIR)/$(ARCHIVE)
+
+
+init-test-env:
+	vagrant up
+	# Warning : this add a test key into the admin
+	ssh-keygen -y -f  .vagrant/machines/default/virtualbox/private_key >> $(HOME)/.ansible/roles/infra-role-bootstrap-linux/files/keys/admin.pub
+	ansible-playbook ansible/bootstrap.yml \
+			--inventory ansible/inventory/test \
+			--extra-vars '@ansible/group_vars/test.yml' \
+			--tags role::bootstrap:packages,role::bootstrap:docker,role::bootstrap:firewall,role::bootstrap:users,role::bootstrap:logging 
+
+
+
+test-run-upgrade:
+	ansible-playbook ansible/upgrade.yml \
+		--inventory ansible/inventory/test \
+		--extra-vars '@ansible/group_vars/test.yml'
+
+clean-test-env:
+	vagrant destroy 
+	rm -r .vagrant
+
+test: init-test-env test-run-upgrade clean-test-env
