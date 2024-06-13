@@ -261,11 +261,11 @@ def handle_role(role, check=False, update=False, install=False):
         return role
 
     # Verify if git repo is not dirty or has detached head.
-    if (role.is_dirty() or role.is_detached()) and not update:
+    if not update and (role.is_dirty() or role.is_detached()):
         return role
 
     # No need to fail if no version is set.
-    if not role.version and check:
+    if check and not role.version:
         return role
 
     # Update config version or pull new changes.
