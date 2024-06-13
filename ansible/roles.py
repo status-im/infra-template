@@ -192,8 +192,8 @@ class Role:
     def is_ancestor(self):
         if self.required is None or self.required == self.current_commit:
             return False
-        return self._git_fail_is_false(
-            self.required, '--is-ancestor', self.current_commit
+        return not self._git_fail_is_false(
+            'merge-base', self.required, '--is-ancestor', self.current_commit
         )
 
     @property
