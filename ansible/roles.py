@@ -253,8 +253,8 @@ def handle_role(role, check=False, update=False, install=False):
         return role
 
     # Check if current version is newer.
-    if role.is_ancestor():
-        return role
+    if not update and role.is_ancestor():
+            return role
 
     # Check if current version matches required.
     if role.valid_version():
