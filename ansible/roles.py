@@ -380,7 +380,7 @@ def main():
         if args.filter not in req.name:
             continue
         role = processed_roles[req.name]
-        print('%-40s --- %22s (Git: %s | Req: %s)' %
+        print('%-44s --- %22s (Git: %s | Req: %s)' %
               (BOLD(role.name), role.state,
                CYAN(role.current_commit[:8]),
                commit_or_any(role.required)))
