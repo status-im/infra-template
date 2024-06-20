@@ -7,8 +7,3 @@ data "pass_password" "cloudflare_token" {
 data "pass_password" "cloudflare_email" {
   path = "cloud/Cloudflare/email"
 }
-
-/* ID of CloudFlare Account. */
-data "pass_password" "cloudflare_account" {
-  path = "cloud/Cloudflare/account"
-}
