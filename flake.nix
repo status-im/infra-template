@@ -15,10 +15,11 @@
         pkgs = pkgsFor.${system};
       in {
         default = let
-          pythonPkgs = pkgs.python310.withPackages (
-            _: with (pkgs.python310Packages); [
+          pythonPkgs = pkgs.python311.withPackages (
+            _: with (pkgs.python311Packages); [
               ipython pyyaml jinja2 PyGithub
               pyopenssl cryptography
+              hvac
             ]
           );
         in pkgs.mkShellNoCC {
