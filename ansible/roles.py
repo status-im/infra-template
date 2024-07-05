@@ -67,9 +67,9 @@ class State(Enum):
     CLONE_FAILURE = 7
     MISSING       = 8
     CLONED        = 9
-    UPDATED       = 10
+    SKIPPED       = 10
     VALID         = 11
-    SKIPPED       = 12
+    UPDATED       = 12
 
     def __str__(self):
         match self:
@@ -222,18 +222,20 @@ class Role:
     def valid_version(self):
         return self.required == self.current_commit
 
-    @State.update(success=State.VALID, failure=State.WRONG_VERSION)
+    @State.update(success=State.UPDATED, failure=State.WRONG_VERSION)
     def pull(self):
         self._git('remote', 'update')
         status = self._git('status', '--untracked-files=no')
 
         if 'branch is up to date' in status:
-            return True
+            return self.version
         elif 'branch is behind' not in status:
             return None
 
         rval = self._git('pull')
-        return self.valid_version()
+
+        self.version = self.current_commit
+        return self.current_commit
 
     @State.update(success=State.CLONED, failure=State.CLONE_FAILURE)
     def clone(self):
