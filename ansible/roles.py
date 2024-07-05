@@ -7,7 +7,7 @@ import subprocess
 import functools
 from enum import Enum
 from pathlib import Path
-from os import path, getenv, symlink, readlink, makedirs
+from os import environ, path, getenv, symlink, readlink, makedirs
 from packaging.version import parse as version_parse
 from concurrent import futures
 
@@ -145,11 +145,16 @@ class Role:
 
     def _git(self, *args, cwd=None):
         cmd = ['git'] + list(args)
+        env = dict(
+            environ,
+            GIT_SSH_COMMAND='ssh -o "StrictHostKeyChecking=accept-new"'
+        )
         LOG.debug('[%-27s]: COMMAND: %s', self.name, ' '.join(cmd))
         rval = subprocess.run(
             cmd,
             capture_output=True,
-            cwd=cwd or self.path
+            cwd=cwd or self.path,
+            env=env,
         )
         LOG.debug('[%-27s]: RETURN: %d', self.name, rval.returncode)
         if rval.stdout:
