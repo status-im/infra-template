@@ -168,9 +168,9 @@ class Role:
         try:
             self._git(*args, cwd=cwd)
         except:
-            return True
-        else:
             return False
+        else:
+            return True
 
     @property
     def repo_parent_dir(self):
@@ -186,19 +186,23 @@ class Role:
             return '........'
         return self._git('rev-parse', 'HEAD')
 
+    @State.update(failure=State.DIRTY)
+    def has_upstream(self):
+        return self._git_fail_is_false('rev-parse', '--symbolic-full-name', '@{u}')
+
     @State.update(success=State.DIRTY)
     def is_dirty(self):
-        return self._git_fail_is_false('diff-files', '--quiet')
+        return not self._git_fail_is_false('diff-files', '--quiet')
 
     @State.update(success=State.DETACHED)
     def is_detached(self):
-        return self._git_fail_is_false('symbolic-ref', 'HEAD')
+        return not self._git_fail_is_false('symbolic-ref', 'HEAD')
 
     @State.update(success=State.NEWER_VERSION)
     def is_ancestor(self):
         if self.required is None or self.required == self.current_commit:
             return False
-        return not self._git_fail_is_false(
+        return self._git_fail_is_false(
             'merge-base', self.required, '--is-ancestor', self.current_commit
         )
 
@@ -280,7 +284,7 @@ def handle_role(role, check=False, update=False, install=False):
     # Update config version or pull new changes.
     if update:
         role.version = role.current_commit
-    elif install:
+    elif install and role.has_upstream():
         # If version is not specified we just want the newest.
         role.pull()
     return role
