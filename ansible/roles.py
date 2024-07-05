@@ -6,7 +6,8 @@ import argparse
 import subprocess
 import functools
 from enum import Enum
-from os import path, getenv, symlink, readlink
+from pathlib import Path
+from os import path, getenv, symlink, readlink, makedirs
 from packaging.version import parse as version_parse
 from concurrent import futures
 
@@ -291,6 +292,9 @@ def roles_to_yaml(old_reqs, processed_roles):
 def commit_or_any(commit):
     return '*' if commit is None else commit[:8]
 
+def parent_path(str_path):
+    return Path(*Path(str_path).parts[:-1])
+
 # Symlink only if folder or link doesn't exist.
 def symlink_roles_dir(roles_symlink):
     if path.islink(ROLES_PATH):
@@ -304,6 +308,7 @@ def symlink_roles_dir(roles_symlink):
         LOG.error('Roles path is a directory, cannot symlink!')
         exit(1)
 
+    makedirs(parent_path(ROLES_PATH))
     symlink(roles_symlink, ROLES_PATH)
 
 def parse_args():
