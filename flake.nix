@@ -25,7 +25,7 @@
         in pkgs.mkShellNoCC {
           packages = with pkgs.buildPackages; [
             # misc
-            git openssh jq fzf silver-searcher
+            git openssh jq fzf silver-searcher direnv
             # networking
             curl nmap nettools dnsutils
             # infra
@@ -40,6 +40,8 @@
           shellHook = ''
             ./ansible/roles.py --check || \
               echo -e '\nWARNING: Your role versions appear to be incorrect!' >&2
+            eval "$(direnv hook bash)"
+            direnv allow .
           '';
         };
       });
