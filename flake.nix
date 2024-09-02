@@ -31,7 +31,7 @@
             # infra
             terraform ansible_2_16 pythonPkgs
             # security
-            pass bitwarden-cli yubikey-manager pwgen
+            pass vault bitwarden-cli yubikey-manager pwgen
             # cloud
             aliyun-cli awscli doctl google-cloud-sdk
             hcloud s3cmd scaleway-cli
