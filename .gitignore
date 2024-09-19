@@ -8,3 +8,5 @@
 
 ansible/files/*
 __pycache__
+
+.vagrant

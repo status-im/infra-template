@@ -1,0 +1,2 @@
+[all]
+test hostname=localhost ansible_host=127.0.0.1 ansible_port=2222 env=test stage=test data_center=test region=test dns_entry=test.statusim.net
