@@ -6,7 +6,7 @@ Herein lie all ansible related files __except__ for `ansible.cfg` at the root of
 
 Simply run the play related to the specific type of configuration you want to deploy:
 ```sh
- > ls -1 ansible/*.yml 
+ > ls -1 ansible/*.yml
 ansible/bootstrap.yml
 ansible/upgrade.yml
 ansible/main.yml
@@ -41,7 +41,7 @@ ansible all -o -m debug -a 'var=ansible_host' | columns -t
 
 # Variables
 
-Ansible variables can be provided to Ansible using the `--extra-vars`/`-e` flag. An example of such a flag is 
+Ansible variables can be provided to Ansible using the `--extra-vars`/`-e` flag. An example of such a flag is:
 ```yaml
 compose_state: 'present'
 compose_recreate: 'smart'
@@ -56,7 +56,10 @@ ansible-playbook ansible/main.yml -e compose_recreate=always
 
 # Secrets
 
-Secrets are stored and provided in two ways:
+Secrets are stored and provided in three ways:
 
-* [password-store](https://www.passwordstore.org/) through the [`passwordstore` lookup plugin](https://docs.ansible.com/ansible/latest/collections/community/general/passwordstore_lookup.html)
-* [BitWarden](https://bitwarden.com/) through the [`./lookup_plugins/bitwarden.py`](./lookup_plugins/bitwarden.py) plugin.
+* [password-store](https://www.passwordstore.org/) - Using [`passwordstore`](https://docs.ansible.com/ansible/latest/collections/community/general/passwordstore_lookup.html) plugin for core infra secrets.
+* [Vault](https://www.vaultproject.io/) - Using [`vault`](./lookup_plugins/vault.py) plugin for service secrets.
+* [BitWarden](https://bitwarden.com/) - Using [`bitwarden`](./lookup_plugins/bitwarden.py) plugin for Web logins.
+
+Read [secrets management guide](https://docs.infra.status.im/guides/secret_management.html) for more details.
