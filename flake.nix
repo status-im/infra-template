@@ -19,8 +19,8 @@
         pkgs = pkgsFor.${system};
       in {
         default = let
-          pythonPkgs = pkgs.python311.withPackages (
-            _: with (pkgs.python311Packages); [
+          pythonPkgs = pkgs.python3.withPackages (
+            _: with (pkgs.python3Packages); [
               ipython pyyaml jinja2 PyGithub
               pyopenssl cryptography
               hvac
