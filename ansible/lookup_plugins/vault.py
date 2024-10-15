@@ -82,7 +82,7 @@ class LookupModule(LookupBase):
         prefix = ""
         if override:
             display.debug("Overriding the env/stage behavior and using only the path provided: %s" % terms)
-        else: 
+        else:
             display.debug("Using the env : %s and the stage : %s" % (env, stage))
             prefix=f"{env}/{stage}/"
         for term in terms:
@@ -94,9 +94,31 @@ class LookupModule(LookupBase):
         return values
 
     def lookup(self, term, **kwargs):
-        field  = kwargs.get('field')
+        field = kwargs.get('field')
         display.v("Querying Vault field %s at path %s" % (field,term))
         val = self.vault.secrets.kv.read_secret_version(term)
-        if val:
-            return str(val['data']['data'][field])
+        if not val:
+            return None
+        if field not in val['data']['data']:
+            raise AnsibleError('No such field in Vault entry: %s' % field)
+        return str(val['data']['data'][field])
 
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: %s <path> <field>" % os.path.basename(__file__))
+        return 1
+
+    tokens = sys.argv[1].split('/')
+    if len(tokens) < 2:
+        print("Path too short: %s" % sys.argv[1])
+        return 1
+
+    print(LookupModule().run(
+        ['/'.join(tokens[2:])],
+        field=sys.argv[2],
+        variables={'env':tokens[0],'stage':tokens[1]}
+    ))
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
