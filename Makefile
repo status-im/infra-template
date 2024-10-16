@@ -1,4 +1,12 @@
-OS = $(strip $(shell uname -s))
+# Colors
+YLW = \033[1;33m
+RED = \033[0;31m
+GRN = \033[0;32m
+BLU = \033[0;34m
+BLD = \033[1m
+RST = \033[0m
+
+OS = w$(strip $(shell uname -s))
 
 ifeq ($(OS),Darwin)
 ARCH = darwin_amd64
@@ -16,17 +24,18 @@ PROVISIONER_ARCHIVE = $(PROVISIONER_NAME)-$(subst _,-,$(ARCH))_$(PROVISIONER_VER
 PROVISIONER_URL = https://github.com/radekg/terraform-provisioner-ansible/releases/download/$(PROVISIONER_VERSION)/$(PROVISIONER_ARCHIVE)
 PROVISIONER_PATH = $(TF_PLUGINS_DIR)/$(ARCH)/$(PROVISIONER_NAME)_$(PROVISIONER_VERSION)
 
-all: roles-install install-provisioner secrets init-terraform
+all: roles-install install-provisioner secrets init-terraform checks
 	@echo "Success!"
 
 roles-install:
-	ansible/roles.py --install
+	@ansible/roles.py --install
 
 roles-check:
-	ansible/roles.py --check
+	@ansible/roles.py --check || \
+		echo -e '\n$(YLW)WARNING: Local role versions appear to be incorrect.$(RST)' >&2
 
 roles-update:
-	ansible/roles.py --update
+	@ansible/roles.py --update
 
 roles: roles-install roles-check
 
@@ -47,13 +56,30 @@ secrets:
 	pass services/vault/certs/client-user/cert > ansible/files/vault-client-user.crt
 	pass services/vault/certs/client-user/privkey > ansible/files/vault-client-user.key
 
-consul-token-check:
-ifndef CONSUL_HTTP_TOKEN
-	$(error No CONSUL_HTTP_TOKEN env variable set!)
-endif
-
-init-terraform: consul-token-check
+init-terraform: consul-check
 	terraform init -upgrade=true
 
 cleanup:
 	rm -r $(TF_PLUGINS_DIR)/$(ARCHIVE)
+
+consul-check:
+ifndef CONSUL_HTTP_TOKEN
+	@echo -e "$(RED)$(BLD)ERROR: No CONSUL_HTTP_TOKEN env variable set!$(RST)"; exit 1
+endif
+
+vault-check:
+ifndef VAULT_HTTP_TOKEN
+	@echo -e "$(RED)$(BLD)ERROR: No VAULT_HTTP_TOKEN env variable set!$(RST)"; exit 1
+endif
+
+DIRENV_LOADED ?= $(shell direnv status --json | jq .state.loadedRC.allowed)
+direnv-check:
+	@if [[ "$(DIRENV_LOADED)" -ne 0 ]] && [[ -z "$${DIRENV_IN_ENVRC}" ]]; then \
+		echo -e "$(YLW)WARNING: This repo assumes use of Direnv:$(RST)" \
+				"$(BLD)"'eval "$$(direnv hook zsh)"; direnv allow'"$(RST)"; \
+	fi
+
+checks: roles-check direnv-check consul-check vault-check
+	@echo -e "\n$(GRN)$(BLD)Environment ready.$(RST)"
+
+.PHONY = checks roles-check direnv-check consul-check vault-check
