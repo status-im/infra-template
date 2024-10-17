@@ -1,13 +1,13 @@
 ---
 # Root password
-bootstrap__root_pass:                '{{lookup("vault", "hosts/config",            field="root-pass")}}'
+bootstrap__root_pass:               '{{lookup("vault", "config",            field="root-pass",             stage="all", env="all")}}'
 # Consul
-bootstrap__consul_encryption_key:    '{{lookup("vault", "hosts/config",            field="consul-encryption-key")}}'
-bootstarp__consul_agent_acl_token:   '{{lookup("vault", "hosts/consul/acl-tokens", field="agent-default")}}'
-bootstrap__consul_certs_ca_crt:      '{{lookup("vault", "hosts/consul/certs",      field="ca.pem")}}'
-bootstrap__consul_certs_client_crt:  '{{lookup("vault", "hosts/consul/certs",      field="client.pem")}}'
-bootstrap__consul_certs_client_key:  '{{lookup("vault", "hosts/consul/certs",      field="client-key.pem")}}'
+bootstrap__consul_encryption_key:   '{{lookup("vault", "config",            field="consul-encryption-key", stage="all", env="all")}}'
+bootstarp__consul_agent_acl_token:  '{{lookup("vault", "consul/acl-tokens", field="agent-default",         stage="all", env="all")}}'
+bootstrap__consul_certs_ca_crt:     '{{lookup("vault", "consul/certs",      field="ca.pem",                stage="all", env="all")}}'
+bootstrap__consul_certs_client_crt: '{{lookup("vault", "consul/certs",      field="client.pem",            stage="all", env="all")}}'
+bootstrap__consul_certs_client_key: '{{lookup("vault", "consul/certs",      field="client-key.pem",        stage="all", env="all")}}'
 # SSHGuard
-bootstrap__sshguard_whitelist_extra: ['{{lookup("vault", "hosts/sshguard/whitelist",    field="jakubgs-home")}}']
+bootstrap__sshguard_whitelist_extra: ['{{lookup("vault", "sshguard/whitelist",    field="jakubgs-home",    stage="all", env="all")}}']
 # Wireguard
-wireguard_consul_acl_token:          '{{lookup("vault", "hosts/config",            field="wireguard-acl-token")}}'
+wireguard_consul_acl_token:         '{{lookup("vault", "consul/acl-tokens", field="wireguard",             stage="all", env="all")}}'
