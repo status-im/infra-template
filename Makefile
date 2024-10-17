@@ -80,6 +80,6 @@ direnv-check:
 	fi
 
 checks: roles-check direnv-check consul-check vault-check
-	@echo -e "\n$(GRN)$(BLD)Environment ready.$(RST)"
+	@echo -e "\n$(GRN)$(BLD)WELCOME BACK, COMMANDER$(RST)"
 
 .PHONY = checks roles-check direnv-check consul-check vault-check
