@@ -1,20 +1,19 @@
-OS = $(strip $(shell uname -s))
+OS = $(shell uname -s | tr A-Z a-z)
+ARCH = "${OS}-$(shell uname -m)"
 
-ifeq ($(OS),Darwin)
-ARCH = darwin_amd64
+ifeq ($(OS),darwin)
 PROVISIONER_SHA1 = bd688a503f526beedaf6ef5d2dba1128051573b6
 else
-ARCH = linux_amd64
-PROVISIONER_SHA1 = da9cdf019d8f860a6e417257d81b1b21aceba7b7
+PROVISIONER_SHA1 = 1cbdf2bafe9e968a039264a6d3e6b58a2d2576eb
 endif
 
 TF_PLUGINS_DIR = $(HOME)/.terraform.d/plugins
 
 PROVISIONER_NAME = terraform-provisioner-ansible
-PROVISIONER_VERSION = v2.5.0
-PROVISIONER_ARCHIVE = $(PROVISIONER_NAME)-$(subst _,-,$(ARCH))_$(PROVISIONER_VERSION)
-PROVISIONER_URL = https://github.com/radekg/terraform-provisioner-ansible/releases/download/$(PROVISIONER_VERSION)/$(PROVISIONER_ARCHIVE)
-PROVISIONER_PATH = $(TF_PLUGINS_DIR)/$(ARCH)/$(PROVISIONER_NAME)_$(PROVISIONER_VERSION)
+PROVISIONER_VERSION = v2.5.1
+PROVISIONER_ARCHIVE = $(PROVISIONER_NAME)-$(ARCH)-$(PROVISIONER_VERSION)
+PROVISIONER_URL = https://github.com/status-im/terraform-provisioner-ansible/releases/download/$(PROVISIONER_VERSION)/$(PROVISIONER_ARCHIVE)
+PROVISIONER_PATH = $(TF_PLUGINS_DIR)/$(PROVISIONER_NAME)
 
 all: roles-install install-provisioner secrets init-terraform
 	@echo "Success!"
