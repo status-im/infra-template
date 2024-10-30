@@ -15,3 +15,6 @@
 
 - name: infra-role-systemd-timer
   src: git@github.com:status-im/infra-role-systemd-timer.git
+
+- name: infra-role-wazuh-agent
+  src: git@github.com:status-im/infra-role-wazuh-agent.git

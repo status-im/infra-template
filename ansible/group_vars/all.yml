@@ -11,3 +11,7 @@ bootstrap__consul_certs_client_key: '{{lookup("vault", "consul/certs",      fiel
 bootstrap__sshguard_whitelist_extra: ['{{lookup("vault", "sshguard/whitelist",    field="jakubgs-home",    stage="all", env="all")}}']
 # Wireguard
 wireguard_consul_acl_token:         '{{lookup("vault", "consul/acl-tokens", field="wireguard",             stage="all", env="all")}}'
+
+# Wazuh Agent
+wazuh_agent_enrollment_key:         '{{ lookup("vault", "manager/config", field="enrollment-password", env="hq", stage="wazuh")}}'
+wazuh_root_ca:                      '{{ lookup("vault", "root-ca",        field="certificate",         env="hq", stage="wazuh")}}'
