@@ -39,6 +39,8 @@ ansible localhost -m debug -a 'var=groups'
 ansible all -o -m debug -a 'var=ansible_host' | columns -t
 ```
 
+A backup of the Terraform state is created at `.terraform/terraform.tfstate.backup`. It is symetrically encrypted using [Fernet algorithm](https://cryptography.io/en/latest/fernet/) with a key generated from haed `CONSUL_HTTP_TOKEN` and can be decrypted by using [`decrypt_tf_backup.py`](https://github.com/status-im/infra-utils/blob/master/terraform/decrypt_tf_backup.py) script.
+
 # Variables
 
 Ansible variables can be provided to Ansible using the `--extra-vars`/`-e` flag. An example of such a flag is:
