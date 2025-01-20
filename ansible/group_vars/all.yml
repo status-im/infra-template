@@ -1,6 +1,8 @@
 ---
-# Root password
-bootstrap__root_pass:               '{{lookup("vault", "config",            field="root-pass",             stage="all", env="all")}}'
+# Passwords
+bootstrap__admin_pass: '{{lookup("vault", "users", field="admin", stage="all", env="all")}}'
+bootstrap__root_pass:  '{{lookup("vault", "users", field="root",  stage="all", env="all")}}'
+bootstrap__active_users_passwords: '{{ bootstrap__active_users | get_user_passwords }}'
 # Consul
 bootstrap__consul_encryption_key:   '{{lookup("vault", "config",            field="consul-encryption-key", stage="all", env="all")}}'
 bootstarp__consul_agent_acl_token:  '{{lookup("vault", "consul/acl-tokens", field="agent-default",         stage="all", env="all")}}'
@@ -20,4 +22,3 @@ wazuh_root_ca:                      '{{ lookup("vault", "root-ca",        field=
 bootstrap__vault_ca_cert:           '{{ lookup("passwordstore", "services/vault/certs/root-ca/cert returnall=true")}}'
 bootstrap__vault_client_cert:       '{{ lookup("passwordstore", "services/vault/certs/client-host/cert returnall=true")}}'
 bootstrap__vault_client_key:        '{{ lookup("passwordstore", "services/vault/certs/client-host/privkey returnall=true")}}'
-
