@@ -13,7 +13,7 @@ class FilterModule(object):
         rval = {}
         for user in users:
             try:
-                rval[user['name']] = get_pass(user['name'])
+                rval[user['name']] = get_pass(user['name'])[0]
             except AnsibleError as err:
                 continue # Allow for users without passwords
         return rval
