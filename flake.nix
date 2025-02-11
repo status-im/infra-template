@@ -15,11 +15,10 @@
         pkgs = pkgsFor.${system};
       in {
         default = let
-          pythonPkgs = pkgs.python3.withPackages (
-            _: with (pkgs.python3Packages); [
+          pythonPkgs = pkgs.python312.withPackages (
+            _: with (pkgs.python312Packages); [
               ipython pyyaml jinja2 PyGithub
-              pyopenssl cryptography
-              hvac
+              pyopenssl cryptography hvac
             ]
           );
         in pkgs.mkShellNoCC {
@@ -29,7 +28,7 @@
             # networking
             curl nmap nettools dnsutils
             # infra
-            terraform ansible_2_16 pythonPkgs
+            terraform ansible_2_17 pythonPkgs
             # security
             pass vault yubikey-manager pwgen
             # cloud
