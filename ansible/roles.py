@@ -59,24 +59,28 @@ class State(Enum):
     # Order is priority. Higher status trumps lower.
     UNKNOWN       = 0
     EXISTS        = 1
-    WRONG_VERSION = 2
-    NOT_PUSHED    = 3
-    NEWER_VERSION = 4
-    DIRTY         = 5
-    DETACHED      = 6
-    NO_VERSION    = 7
-    CLONE_FAILURE = 8
-    MISSING       = 9
-    CLONED        = 10
-    SKIPPED       = 11
-    VALID         = 12
-    UPDATED       = 13
+    OLD_VERSION   = 2
+    WRONG_VERSION = 3
+    NOT_PUSHED    = 4
+    NEWER_VERSION = 5
+    WRONG_BRANCH  = 6
+    DIRTY         = 7
+    DETACHED      = 8
+    NO_VERSION    = 9
+    CLONE_FAILURE = 10
+    MISSING       = 11
+    CLONED        = 12
+    SKIPPED       = 13
+    VALID         = 14
+    UPDATED       = 15
 
     def __str__(self):
         match self:
             case State.NEWER_VERSION: color = BOLD
+            case State.OLD_VERSION:   color = RED
             case State.WRONG_VERSION: color = RED
             case State.NOT_PUSHED:    color = RED
+            case State.WRONG_BRANCH:  color = YELLOW
             case State.DIRTY:         color = YELLOW
             case State.DETACHED:      color = YELLOW
             case State.NO_VERSION:    color = PURPLE
@@ -192,6 +196,14 @@ class Role:
     def has_upstream(self):
         return self._git_fail_is_false('rev-parse', '--symbolic-full-name', '@{u}')
 
+    @State.update(failure=State.WRONG_BRANCH)
+    def correct_branch(self):
+        return self.branch == 'master'
+
+    @State.update(success=State.OLD_VERSION)
+    def is_old(self):
+        return not self._git_fail_is_false('merge-base', '--is-ancestor', '@{u}', 'HEAD')
+
     @State.update(failure=State.NOT_PUSHED)
     def is_pushed(self):
         return self._git_fail_is_false('merge-base', '--is-ancestor', 'HEAD', '@{u}')
@@ -273,9 +285,17 @@ def handle_role(role, check=False, update=False, install=False):
             role.clone()
         return role
 
+    # Check if current branch is master.
+    if not role.correct_branch():
+        return role
+
     # Check if current version is newer.
     if not update and role.is_ancestor():
-            return role
+        return role
+
+    # Check if current version is older.
+    if update and role.is_old():
+        return role
 
     # Check if current version matches required.
     if role.valid_version():
