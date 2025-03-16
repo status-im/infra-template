@@ -191,6 +191,8 @@ class Role:
         if not self.exists():
             return '........'
         return self._git('rev-parse', 'HEAD')
+    def upstream_commit(self):
+        return self._git('rev-parse', '@{u}')
 
     @State.update(failure=State.DIRTY)
     def has_upstream(self):
@@ -240,6 +242,9 @@ class Role:
     def valid_version(self):
         return self.required == self.current_commit
 
+    def fetch(self):
+        self._git('fetch')
+
     @State.update(success=State.UPDATED, failure=State.WRONG_VERSION)
     def pull(self):
         self._git('remote', 'update')
@@ -278,12 +283,14 @@ class Role:
         return path.isdir(self.path)
 
 
-def handle_role(role, check=False, update=False, install=False):
+def handle_role(role, check=False, update=False, install=False, fetch=False):
     LOG.debug('[%-27s]: Processing role...', role.name)
     if not role.exists():
         if not check and not update:
             role.clone()
         return role
+    elif fetch:
+        role.fetch()
 
     # Check if current branch is master.
     if not role.correct_branch():
@@ -355,7 +362,7 @@ def parse_args():
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    parser.add_argument('-f', '--filter', default='',
+    parser.add_argument('-F', '--filter', default='',
                         help='Filter role repo names.')
     parser.add_argument('-w', '--workers', default=getenv('ROLES_WORKERS', ROLES_WORKERS), type=int,
                         help='Max workers to run in parallel.')
@@ -365,6 +372,8 @@ def parse_args():
                         help='Actual location of installed roles.')
     parser.add_argument('-l', '--log-level', default='INFO',
                         help='Logging level.')
+    parser.add_argument('-f', '--fetch', action='store_true',
+                       help='Fetch changes from remotes.')
     parser.add_argument('-d', '--fail-dirty', action='store_true',
                        help='Fail if repo is dirty.')
     parser.add_argument('-a', '--fail-detached', action='store_true',
@@ -410,7 +419,7 @@ def main():
     # Check if each Ansible role is installed and has correct version.
     with futures.ProcessPoolExecutor(max_workers=args.workers) as executor:
         these_futures = [
-            executor.submit(handle_role, role, args.check, args.update, args.install)
+            executor.submit(handle_role, role, args.check, args.update, args.install, args.fetch)
             for role in requirements
             if args.filter in role.name
         ]
