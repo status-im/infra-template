@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+import re
 import yaml
 import logging
 import ansible
+import requests
 import argparse
 import subprocess
 import functools
@@ -130,6 +132,7 @@ class Role:
         self.name = name
         self.src = src
         self.required = required
+        self.owner = re.split('[:/]', src)[1]
 
     @classmethod
     def from_requirement(cls, obj):
@@ -191,8 +194,12 @@ class Role:
         if not self.exists():
             return '........'
         return self._git('rev-parse', 'HEAD')
+
     def upstream_commit(self):
         return self._git('rev-parse', '@{u}')
+
+    def remote_url(self, remote_name):
+        return self._git('remote', 'get-url', remote_name)
 
     @State.update(failure=State.DIRTY)
     def has_upstream(self):
@@ -242,12 +249,31 @@ class Role:
     def valid_version(self):
         return self.required == self.current_commit
 
-    def fetch(self):
-        self._git('fetch')
+    def add_https_remote(self, remote_name='https-origin'):
+        origin_url = self.remote_url('origin')
+        https_url = origin_url.replace('git@github.com:', 'https://github.com/')
+        self._git('remote', 'add', remote_name, https_url)
+        return remote_name
+
+    def best_remote(self):
+        if 'https-origin' in self._git('remote'):
+            return 'https-origin'
+        elif not self.is_private():
+            # Using SSH for fetching branches is too slow.
+            return self.add_https_remote()
+        return 'origin'
+
+    def fetch(self, remote_name=None):
+        self._git('fetch', remote_name or self.best_remote())
+
+    def is_private(self):
+        url = 'https://github.com/%s/%s' % (self.owner, self.name)
+        resp = requests.get(url)
+        return resp.status_code == 404
 
     @State.update(success=State.UPDATED, failure=State.WRONG_VERSION)
     def pull(self):
-        self._git('remote', 'update')
+        self._git('remote', 'update', self.best_remote())
         status = self._git('status', '--untracked-files=no')
 
         if 'branch is up to date' in status:
@@ -255,7 +281,7 @@ class Role:
         elif 'branch is behind' not in status:
             return None
 
-        rval = self._git('pull')
+        rval = self._git('pull', self.best_remote(), 'master')
 
         self.version = self.current_commit
         return self.current_commit
@@ -289,7 +315,7 @@ def handle_role(role, check=False, update=False, install=False, fetch=False):
         if not check and not update:
             role.clone()
         return role
-    elif fetch:
+    elif fetch and role.required:
         role.fetch()
 
     # Check if current branch is master.
@@ -372,7 +398,7 @@ def parse_args():
                         help='Actual location of installed roles.')
     parser.add_argument('-l', '--log-level', default='INFO',
                         help='Logging level.')
-    parser.add_argument('-f', '--fetch', action='store_true',
+    parser.add_argument('-f', '--fetch', default=True, action=argparse.BooleanOptionalAction,
                        help='Fetch changes from remotes.')
     parser.add_argument('-d', '--fail-dirty', action='store_true',
                        help='Fail if repo is dirty.')
