@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+import re
 import yaml
 import logging
 import ansible
+import requests
 import argparse
 import subprocess
 import functools
@@ -130,6 +132,7 @@ class Role:
         self.name = name
         self.src = src
         self.required = required
+        self.owner = re.split('[:/]', src)[1]
 
     @classmethod
     def from_requirement(cls, obj):
@@ -191,8 +194,12 @@ class Role:
         if not self.exists():
             return '........'
         return self._git('rev-parse', 'HEAD')
+
     def upstream_commit(self):
         return self._git('rev-parse', '@{u}')
+
+    def remote_url(self, remote_name):
+        return self._git_fail_is_false('remote', 'get-url', remote_name)
 
     @State.update(failure=State.DIRTY)
     def has_upstream(self):
@@ -242,8 +249,29 @@ class Role:
     def valid_version(self):
         return self.required == self.current_commit
 
-    def fetch(self):
-        self._git('fetch')
+    def add_https_remote(self, remote_name='https-origin'):
+        if remote_name in self._git('remote'):
+            return remote_name
+        # Using SSH for fetching branches is too slow.
+        origin_url = self.remote_url('origin')
+        https_url = origin_url.replace('git@github.com:', 'https://github.com/')
+        self._git('remote', 'add', remote_name, https_url)
+        return remote_name
+
+    def fetch(self, remote_name='origin'):
+        self._git('fetch', remote_name)
+
+    def faster_fetch(self):
+        # Check for existing remotes first to avoid querying GitHub.
+        if 'https-origin' in self._git('remote') or not self.is_private():
+            self.fetch(self.add_https_remote())
+        else:
+            self.fetch()
+
+    def is_private(self):
+        url = 'https://github.com/repos/%s/%s' % (self.owner, self.name)
+        resp = requests.get(url)
+        return resp.status_code == 404
 
     @State.update(success=State.UPDATED, failure=State.WRONG_VERSION)
     def pull(self):
@@ -289,8 +317,8 @@ def handle_role(role, check=False, update=False, install=False, fetch=False):
         if not check and not update:
             role.clone()
         return role
-    elif fetch:
-        role.fetch()
+    elif fetch and role.required:
+        role.faster_fetch()
 
     # Check if current branch is master.
     if not role.correct_branch():
@@ -372,7 +400,7 @@ def parse_args():
                         help='Actual location of installed roles.')
     parser.add_argument('-l', '--log-level', default='INFO',
                         help='Logging level.')
-    parser.add_argument('-f', '--fetch', action='store_true',
+    parser.add_argument('-f', '--fetch', default=True, action=argparse.BooleanOptionalAction,
                        help='Fetch changes from remotes.')
     parser.add_argument('-d', '--fail-dirty', action='store_true',
                        help='Fail if repo is dirty.')
