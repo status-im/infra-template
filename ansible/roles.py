@@ -195,7 +195,7 @@ class Role:
             return '........'
         return self._git('rev-parse', 'HEAD')
 
-    def upstream_commit(self):
+    def upstream_commit(self, target='@{u}'):
         return self._git('rev-parse', '@{u}')
 
     def remote_url(self, remote_name):
@@ -210,12 +210,12 @@ class Role:
         return self.branch == 'master'
 
     @State.update(success=State.OLD_VERSION)
-    def is_old(self):
-        return not self._git_fail_is_false('merge-base', '--is-ancestor', '@{u}', 'HEAD')
+    def is_old(self, target='@{u}'):
+        return not self._git_fail_is_false('merge-base', '--is-ancestor', target, 'HEAD')
 
     @State.update(failure=State.NOT_PUSHED)
-    def is_pushed(self):
-        return self._git_fail_is_false('merge-base', '--is-ancestor', 'HEAD', '@{u}')
+    def is_pushed(self, target='@{u}'):
+        return self._git_fail_is_false('merge-base', '--is-ancestor', 'HEAD', target)
 
     @State.update(success=State.DIRTY)
     def is_dirty(self):
@@ -226,12 +226,10 @@ class Role:
         return not self._git_fail_is_false('symbolic-ref', 'HEAD')
 
     @State.update(success=State.NEWER_VERSION)
-    def is_ancestor(self):
-        if self.required is None or self.required == self.current_commit:
+    def is_ancestor(self, target, current='HEAD'):
+        if target is None or target == self.current_commit:
             return False
-        return self._git_fail_is_false(
-            'merge-base', self.required, '--is-ancestor', self.current_commit
-        )
+        return self._git_fail_is_false('merge-base', '--is-ancestor', target, current)
 
     @property
     @State.update(failure=State.NO_VERSION)
@@ -273,13 +271,10 @@ class Role:
 
     @State.update(success=State.UPDATED, failure=State.WRONG_VERSION)
     def pull(self):
-        self.fetch()
-        status = self._git('status', '--untracked-files=no')
-
-        if 'branch is up to date' in status:
+        self.fetch(self.best_remote())
+        # If current commit matches upstream no action needed.
+        if not self.is_old(self.upstream_commit()):
             return self.version
-        elif 'branch is behind' not in status:
-            return None
 
         rval = self._git('pull', self.best_remote(), 'master')
 
@@ -323,7 +318,7 @@ def handle_role(role, check=False, update=False, install=False, fetch=False):
         return role
 
     # Check if current version is newer.
-    if not update and role.is_ancestor():
+    if not update and role.is_ancestor(role.required):
         return role
 
     # Check if current version is older.
