@@ -266,6 +266,14 @@ class Role:
     def fetch(self, remote_name=None):
         self._git('fetch', remote_name or self.best_remote())
 
+    # git status compares to upstream remote
+    def status(self, remote_name=None):
+        current_upstream = self._git('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')
+        self._git('branch', f'--set-upstream-to={remote_name or self.best_remote()}/master')
+        status = self._git('status', '--untracked-files=no')
+        self._git('branch', f'--set-upstream-to={current_upstream}')
+        return status
+
     def is_private(self):
         url = 'https://github.com/%s/%s' % (self.owner, self.name)
         resp = requests.get(url)
@@ -274,7 +282,7 @@ class Role:
     @State.update(success=State.UPDATED, failure=State.WRONG_VERSION)
     def pull(self):
         self.fetch()
-        status = self._git('status', '--untracked-files=no')
+        status = self.status()
 
         if 'branch is up to date' in status:
             return self.version
