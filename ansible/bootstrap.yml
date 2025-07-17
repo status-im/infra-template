@@ -33,6 +33,7 @@
     - name: Enable Maintenance Mode
       command: 'maintenance Ansible run by {{ lookup("env", "USER") }}'
       tags: always
+      ignore_errors: true
   post_tasks:
     - name: Disable Maintenance Mode
       command: 'maintenance disable'
