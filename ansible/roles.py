@@ -443,6 +443,7 @@ def main():
     ]
 
     # Check if each Ansible role is installed and has correct version.
+    LOG.info("Fetching from git remote takes time")
     with futures.ProcessPoolExecutor(max_workers=args.workers) as executor:
         these_futures = [
             executor.submit(handle_role, role, args.check, args.update, args.install, args.fetch)
