@@ -181,25 +181,45 @@ class Role:
         else:
             return True
 
+    def _rev_parse(self, *args):
+        return self._git('rev-parse', *args)
+
     @property
     def repo_parent_dir(self):
         return self.path.removesuffix(self.name)
 
     @property
     def branch(self):
-        return self._git('rev-parse', '--abbrev-ref', 'HEAD')
+        return self._rev_parse('--abbrev-ref', 'HEAD')
 
     @property
     def current_commit(self):
         if not self.exists():
             return '........'
-        return self._git('rev-parse', 'HEAD')
+        return self._rev_parse('HEAD')
 
-    def upstream_commit(self):
-        return self._git('rev-parse', '@{u}')
+    def upstream_commit(self, target='@{u}'):
+        return self._rev_parse('@{u}')
 
     def remote_url(self, remote_name):
         return self._git('remote', 'get-url', remote_name)
+
+    def is_ancestor(self, ancestor='${u}', of='HEAD'):
+        return self._git_fail_is_false('merge-base', '--is-ancestor', ancestor, of)
+
+    @State.update(success=State.NEWER_VERSION)
+    def is_new(self, required):
+        if required is None or self._rev_parse(required) == self._rev_parse('HEAD'):
+            return False
+        return self.is_ancestor(required, of='HEAD')
+
+    @State.update(success=State.OLD_VERSION)
+    def is_old(self):
+        return not self.is_ancestor('@{u}', of='HEAD')
+
+    @State.update(failure=State.NOT_PUSHED)
+    def is_pushed(self):
+        return self.is_ancestor('HEAD', of='@{u}')
 
     @State.update(failure=State.DIRTY)
     def has_upstream(self):
@@ -209,14 +229,6 @@ class Role:
     def correct_branch(self):
         return self.branch == 'master'
 
-    @State.update(success=State.OLD_VERSION)
-    def is_old(self):
-        return not self._git_fail_is_false('merge-base', '--is-ancestor', '@{u}', 'HEAD')
-
-    @State.update(failure=State.NOT_PUSHED)
-    def is_pushed(self):
-        return self._git_fail_is_false('merge-base', '--is-ancestor', 'HEAD', '@{u}')
-
     @State.update(success=State.DIRTY)
     def is_dirty(self):
         return not self._git_fail_is_false('diff-files', '--quiet')
@@ -224,14 +236,6 @@ class Role:
     @State.update(success=State.DETACHED)
     def is_detached(self):
         return not self._git_fail_is_false('symbolic-ref', 'HEAD')
-
-    @State.update(success=State.NEWER_VERSION)
-    def is_ancestor(self):
-        if self.required is None or self.required == self.current_commit:
-            return False
-        return self._git_fail_is_false(
-            'merge-base', self.required, '--is-ancestor', self.current_commit
-        )
 
     @property
     @State.update(failure=State.NO_VERSION)
@@ -273,13 +277,11 @@ class Role:
 
     @State.update(success=State.UPDATED, failure=State.WRONG_VERSION)
     def pull(self):
-        self.fetch()
-        status = self._git('status', '--untracked-files=no')
+        self.fetch(self.best_remote())
 
-        if 'branch is up to date' in status:
+        # If current commit matches upstream no action needed.
+        if self.upstream_commit() == self.current_commit:
             return self.version
-        elif 'branch is behind' not in status:
-            return None
 
         rval = self._git('pull', self.best_remote(), 'master')
 
@@ -323,7 +325,7 @@ def handle_role(role, check=False, update=False, install=False, fetch=False):
         return role
 
     # Check if current version is newer.
-    if not update and role.is_ancestor():
+    if not update and role.is_new(role.required):
         return role
 
     # Check if current version is older.
