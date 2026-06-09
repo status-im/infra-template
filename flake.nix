@@ -18,7 +18,7 @@
           pythonPkgs = pkgs.python312.withPackages (
             _: with (pkgs.python312Packages); [
               ipython pyyaml jinja2 PyGithub
-              pyopenssl cryptography hvac
+              pyopenssl cryptography hvac pysocks
             ]
           );
         in pkgs.mkShellNoCC {
