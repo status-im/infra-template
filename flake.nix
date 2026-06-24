@@ -22,7 +22,11 @@
             ]
           );
         in pkgs.mkShellNoCC {
-          packages = with pkgs.buildPackages; [
+          packages = with pkgs.buildPackages; let
+            # Optional pkgs.nix for customizing repo dev shell.
+            extraPkgs = pkgs.lib.optionals (builtins.pathExists ./pkgs.nix)
+              (import ./pkgs.nix { inherit pkgs; });
+          in [
             # misc
             git openssh jq silver-searcher direnv
             # networking
@@ -34,7 +38,7 @@
             # cloud
             aliyun-cli awscli doctl google-cloud-sdk
             hcloud s3cmd scaleway-cli
-          ];
+          ] ++ extraPkgs;
 
           shellHook = ''
             make checks
