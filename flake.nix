@@ -32,7 +32,7 @@
             # networking
             curl nmap nettools dnsutils
             # infra
-            terraform ansible_2_17 pythonPkgs
+            terraform ansible_2_18 pythonPkgs
             # security
             gopass vault yubikey-manager pwgen
             # cloud
