@@ -1,26 +1,30 @@
 ---
 # Passwords
-bootstrap__active_users_passwords:            '{{ bootstrap__active_users | get_user_passwords }}'
-bootstrap__admin_pass:                        '{{lookup("vault", "users", field="admin", env="all", stage="all")}}'
-bootstrap__root_pass:                         '{{lookup("vault", "users", field="root",  env="all", stage="all")}}'
+bootstrap__active_users_passwords:
+  irotnep:  '{{lookup("community.general.passwordstore", "users/irotnep/sudo")}}'
+  jakubgs:  '{{lookup("community.general.passwordstore", "users/jakubgs/sudo")}}'
+  mburcul:  '{{lookup("community.general.passwordstore", "users/mburcul/sudo")}}'
+  siddarth: '{{lookup("community.general.passwordstore", "users/siddarth/sudo")}}'
+  vedran:   '{{lookup("community.general.passwordstore", "users/vedran/sudo")}}'
+  yakimant: '{{lookup("community.general.passwordstore", "users/yakimant/sudo")}}'
+bootstrap__admin_pass:                        '{{lookup("community.general.passwordstore", "hosts/admin/pass-hash")}}'
+bootstrap__root_pass:                         '{{lookup("community.general.passwordstore", "hosts/root/pass-hash")}}'
 # Consul
 consul_dc:                                    '{{ bootstrap__consul_data_center | default(data_center) | mandatory }}'
-bootstrap__consul_agent_acl_token:            '{{lookup("vault", "consul/acl-tokens/"+consul_dc, field="agent-default",        env="all", stage="all")}}'
-bootstrap__consul_agent_admin_token:          '{{lookup("vault", "consul/acl-tokens/"+consul_dc, field="agent-admin",          env="all", stage="all")}}'
-bootstrap__consul_service_registration_token: '{{lookup("vault", "consul/acl-tokens/"+consul_dc, field="service-registration", env="all", stage="all")}}'
-bootstrap__consul_encryption_key:             '{{lookup("vault", "consul/config",                field="encryption-key",       env="all", stage="all")}}'
-bootstrap__consul_certs_ca_crt:               '{{lookup("vault", "consul/certs",                 field="ca.pem",               env="all", stage="all")}}'
-bootstrap__consul_certs_client_crt:           '{{lookup("vault", "consul/certs",                 field="client.pem",           env="all", stage="all")}}'
-bootstrap__consul_certs_client_key:           '{{lookup("vault", "consul/certs",                 field="client-key.pem",       env="all", stage="all")}}'
+bootstrap__consul_agent_acl_token:            '{{lookup("community.general.passwordstore", "services/consul/tokens/agent-default/"+consul_dc)}}'
+bootstrap__consul_agent_admin_token:          '{{lookup("community.general.passwordstore", "services/consul/tokens/agent-admin/"+consul_dc)}}'
+bootstrap__consul_service_registration_token: '{{lookup("community.general.passwordstore", "services/consul/tokens/service-registration/"+consul_dc)}}'
+bootstrap__consul_encryption_key:             '{{lookup("community.general.passwordstore", "services/consul/encryption-key")}}'
+bootstrap__consul_certs_ca_crt:               '{{lookup("community.general.passwordstore", "services/consul/certs/ca.pem",         returnall=true)}}'
+bootstrap__consul_certs_client_crt:           '{{lookup("community.general.passwordstore", "services/consul/certs/client.pem",     returnall=true)}}'
+bootstrap__consul_certs_client_key:           '{{lookup("community.general.passwordstore", "services/consul/certs/client-key.pem", returnall=true)}}'
 # SSHGuard
-bootstrap__sshguard_whitelist_extra:          ['{{lookup("vault", "sshguard/whitelist",          field="jakubgs-home",         env="all", stage="all")}}']
-# Vault
-bootstrap__vault_ca_cert:                     '{{ lookup("community.general.passwordstore", "services/vault/certs/ca-chain",            returnall=true)}}'
-bootstrap__vault_client_cert:                 '{{ lookup("community.general.passwordstore", "services/vault/certs/client-host/cert",    returnall=true)}}'
-bootstrap__vault_client_key:                  '{{ lookup("community.general.passwordstore", "services/vault/certs/client-host/privkey", returnall=true)}}'
+bootstrap__sshguard_whitelist_extra:          ['{{ lookup("community.general.passwordstore", "users/jakubgs/home-ip")}}']
 
 # Wireguard
-wireguard_consul_acl_token:                   '{{lookup("vault", "consul/acl-tokens/global", field="wireguard",          env="all", stage="all")}}'
-# Wazuh Agent
-wazuh_agent_enrollment_key:                   '{{ lookup("vault", "manager/config", field="enrollment-password",  env="hq",  stage="wazuh")}}'
-wazuh_root_ca:                                '{{ lookup("vault", "root-ca",        field="certificate",          env="hq",  stage="wazuh")}}'
+wireguard_consul_acl_token:                   '{{lookup("community.general.passwordstore", "services/consul/tokens/wireguard")}}'
+
+# Master password for backups
+restic_repo_master_pass:                      '{{lookup("community.general.passwordstore", "services/restic/master-pass")}}'
+restic_ssh_public_key:                        '{{lookup("community.general.passwordstore", "services/restic/ssh-public")}}'
+restic_backup_default_docs_url: 'https://github.com/status-im/infra-hq'
